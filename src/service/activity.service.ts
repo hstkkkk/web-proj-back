@@ -135,7 +135,7 @@ export class ActivityService {
 
     // 检查权限：只有创建者可以修改活动
     if (activity.creatorId !== userId) {
-      throw new Error('无权限修改此活动');
+      throw new Error('权限不足，只有活动创建者可以修改活动');
     }
 
     // 如果活动已开始，限制可修改的字段
@@ -236,5 +236,36 @@ export class ActivityService {
 
     activity.currentParticipants = newCount;
     await this.activityRepository.save(activity);
+  }
+
+  /**
+   * 获取活动的报名列表
+   * @param activityId 活动ID
+   * @returns 报名列表
+   */
+  async getActivityRegistrations(activityId: number): Promise<any[]> {
+    const activity = await this.activityRepository.findOne({
+      where: { id: activityId },
+      relations: ['registrations', 'registrations.user'],
+    });
+
+    if (!activity) {
+      throw new Error('活动不存在');
+    }
+
+    return activity.registrations.map(registration => ({
+      id: registration.id,
+      userId: registration.userId,
+      activityId: registration.activityId,
+      notes: registration.notes,
+      registrationTime: registration.createdAt,
+      user: {
+        id: registration.user.id,
+        username: registration.user.username,
+        realName: registration.user.realName,
+        email: registration.user.email,
+        phone: registration.user.phone,
+      },
+    }));
   }
 }

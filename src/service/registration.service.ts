@@ -1,9 +1,10 @@
-import { Provide } from '@midwayjs/core';
+import { Provide, Inject } from '@midwayjs/core';
 import { InjectEntityModel } from '@midwayjs/typeorm';
 import { Repository } from 'typeorm';
 import { Registration } from '../entity/Registration';
 import { Activity } from '../entity/Activity';
 import { User } from '../entity/User';
+import { ActivityService } from './activity.service';
 
 /**
  * 报名服务类
@@ -19,6 +20,9 @@ export class RegistrationService {
 
   @InjectEntityModel(User)
   userRepository: Repository<User>;
+
+  @Inject()
+  activityService: ActivityService;
 
   /**
    * 用户报名活动
@@ -136,7 +140,7 @@ export class RegistrationService {
    */
   async getUserRegistrations(userId: number): Promise<Registration[]> {
     return await this.registrationRepository.find({
-      where: { userId },
+      where: { userId, status: 'confirmed' },
       relations: ['activity'],
       order: { createdAt: 'DESC' },
     });
@@ -171,5 +175,46 @@ export class RegistrationService {
     });
 
     return !!registration;
+  }
+
+  /**
+   * 通过报名ID取消报名
+   * @param registrationId 报名ID
+   * @param userId 用户ID（用于权限验证）
+   */
+  async cancelRegistrationById(
+    registrationId: number,
+    userId: number
+  ): Promise<void> {
+    // 查找报名记录
+    const registration = await this.registrationRepository.findOne({
+      where: { id: registrationId },
+      relations: ['activity'],
+    });
+
+    if (!registration) {
+      throw new Error('报名记录不存在');
+    }
+
+    // 验证用户权限（只能取消自己的报名）
+    if (registration.userId !== userId) {
+      throw new Error('无权限取消此报名');
+    }
+
+    if (registration.status === 'cancelled') {
+      throw new Error('报名已被取消');
+    }
+
+    // 更新报名状态
+    registration.status = 'cancelled';
+    await this.registrationRepository.save(registration);
+
+    // 更新活动参与人数
+    if (this.activityService) {
+      await this.activityService.updateParticipantCount(
+        registration.activityId,
+        -1
+      );
+    }
   }
 }

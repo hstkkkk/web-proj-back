@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { User } from '../entity/User';
 import { CreateUserDTO, UpdateUserDTO } from '../dto/user.dto';
 import * as crypto from 'crypto';
+import * as jwt from 'jsonwebtoken';
 
 /**
  * 用户服务类
@@ -53,19 +54,23 @@ export class UserService {
    * 用户登录验证
    * @param username 用户名
    * @param password 密码
-   * @returns 用户信息（不包含密码）
+   * @returns 用户信息和token
    */
   async validateUser(
     username: string,
     password: string
-  ): Promise<Partial<User> | null> {
+  ): Promise<(Partial<User> & { token: string }) | null> {
     const user = await this.userRepository.findOne({
       where: { username, isActive: true },
     });
 
     if (user && this.verifyPassword(password, user.password)) {
       const { password: pwd, ...userWithoutPassword } = user;
-      return userWithoutPassword;
+      const token = this.generateToken(user.id);
+      return {
+        ...userWithoutPassword,
+        token,
+      };
     }
     return null;
   }
@@ -135,5 +140,14 @@ export class UserService {
   private verifyPassword(password: string, hashedPassword: string): boolean {
     const hash = crypto.createHash('sha256').update(password).digest('hex');
     return hash === hashedPassword;
+  }
+
+  /**
+   * 生成JWT token
+   * @param userId 用户ID
+   * @returns JWT token
+   */
+  private generateToken(userId: number): string {
+    return jwt.sign({ userId }, 'your-secret-key', { expiresIn: '24h' });
   }
 }

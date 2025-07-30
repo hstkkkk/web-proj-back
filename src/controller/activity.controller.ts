@@ -7,9 +7,10 @@ import {
   Body,
   Query,
   Param,
+  Inject,
 } from '@midwayjs/core';
 import { Validate } from '@midwayjs/validate';
-import { Inject } from '@midwayjs/core';
+import { Context } from '@midwayjs/koa';
 import { ActivityService } from '../service/activity.service';
 import {
   CreateActivityDTO,
@@ -26,6 +27,9 @@ export class ActivityController {
   @Inject()
   activityService: ActivityService;
 
+  @Inject()
+  ctx: Context;
+
   /**
    * 创建活动
    */
@@ -33,12 +37,18 @@ export class ActivityController {
   @Validate()
   async createActivity(@Body() activityData: CreateActivityDTO) {
     try {
-      // 在实际应用中，应该从JWT Token中获取用户ID
-      // 这里暂时硬编码为1，实际开发中需要实现认证中间件
-      const creatorId = 1;
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        this.ctx.status = 401;
+        return {
+          success: false,
+          message: '未提供认证令牌',
+        };
+      }
+
       const activity = await this.activityService.createActivity(
         activityData,
-        creatorId
+        userId
       );
       return {
         success: true,
@@ -111,8 +121,15 @@ export class ActivityController {
     @Body() updateData: UpdateActivityDTO
   ) {
     try {
-      // 在实际应用中，应该从JWT Token中获取用户ID
-      const userId = 1;
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        this.ctx.status = 401;
+        return {
+          success: false,
+          message: '未提供认证令牌',
+        };
+      }
+
       const activity = await this.activityService.updateActivity(
         parseInt(id),
         updateData,
@@ -137,8 +154,15 @@ export class ActivityController {
   @Del('/:id')
   async deleteActivity(@Param('id') id: string) {
     try {
-      // 在实际应用中，应该从JWT Token中获取用户ID
-      const userId = 1;
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        this.ctx.status = 401;
+        return {
+          success: false,
+          message: '未提供认证令牌',
+        };
+      }
+
       await this.activityService.deleteActivity(parseInt(id), userId);
       return {
         success: true,
@@ -170,6 +194,76 @@ export class ActivityController {
         success: false,
         message: error.message,
       };
+    }
+  }
+
+  /**
+   * 获取活动的报名列表（仅活动创建者可查看）
+   */
+  @Get('/:id/registrations')
+  async getActivityRegistrations(@Param('id') id: string) {
+    try {
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        this.ctx.status = 401;
+        return {
+          success: false,
+          message: '未提供认证令牌',
+        };
+      }
+
+      // Check if user is the activity creator
+      const activity = await this.activityService.getActivityById(parseInt(id));
+      if (!activity) {
+        this.ctx.status = 404;
+        return {
+          success: false,
+          message: '活动不存在',
+        };
+      }
+
+      if (activity.creatorId !== userId) {
+        return {
+          success: false,
+          message: '权限不足，只有活动创建者可以查看报名列表',
+        };
+      }
+
+      // Get registrations for this activity
+      const registrations = await this.activityService.getActivityRegistrations(
+        parseInt(id)
+      );
+      
+      return {
+        success: true,
+        data: registrations,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  /**
+   * 从JWT token中获取当前用户ID
+   */
+  private async getCurrentUserId(): Promise<number | null> {
+    const authHeader = this.ctx.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null;
+    }
+
+    const token = authHeader.substring(7);
+    
+    try {
+      const jwt = require('jsonwebtoken');
+      const decoded = jwt.verify(token, 'your-secret-key') as any;
+      return decoded.userId;
+    } catch (error) {
+      return null;
     }
   }
 }
