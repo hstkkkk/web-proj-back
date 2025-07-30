@@ -14,6 +14,12 @@ export default {
   cors: {
     origin: 'http://localhost:5173', // 前端开发服务器地址
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  },
+  crossDomain: {
+    allowOrigin: 'http://localhost:5173',
+    credentials: true,
   },
   typeorm: {
     dataSource: {
@@ -29,6 +35,14 @@ export default {
   validate: {
     validationOptions: {
       allowUnknown: false,
+    },
+  },
+  staticFile: {
+    dirs: {
+      default: {
+        prefix: '/',
+        dir: 'public',
+      },
     },
   },
 } as MidwayConfig;
