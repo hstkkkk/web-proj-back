@@ -13,11 +13,15 @@ export class CreateUserDTO {
   @Rule(RuleType.string().email().required())
   email: string;
 
-  @Rule(RuleType.string().optional())
-  phone?: string;
+  @Rule(
+    RuleType.string()
+      .pattern(/^1[3-9]\d{9}$/)
+      .required()
+  )
+  phone: string;
 
-  @Rule(RuleType.string().optional())
-  realName?: string;
+  @Rule(RuleType.string().min(2).required())
+  realName: string;
 }
 
 /**

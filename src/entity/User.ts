@@ -29,13 +29,13 @@ export class User {
   @Column({ unique: true, length: 100 })
   email: string;
 
-  @Column({ length: 50, nullable: true })
+  @Column({ length: 20 })
   phone: string;
 
   @Column({ length: 20, default: 'user' })
   role: string; // 'admin' | 'user'
 
-  @Column({ length: 100, nullable: true })
+  @Column({ length: 100 })
   realName: string;
 
   @Column({ default: true })
