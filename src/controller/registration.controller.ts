@@ -11,7 +11,7 @@ export class CreateRegistrationDTO {
   @Rule(RuleType.number().required())
   activityId: number;
 
-  @Rule(RuleType.string().optional())
+  @Rule(RuleType.string().optional().allow(''))
   notes?: string;
 }
 
