@@ -74,6 +74,22 @@ export class ActivityService {
       });
     }
 
+    // 状态筛选（基于时间）
+    if (searchParams.status) {
+      const now = new Date();
+      
+      if (searchParams.status === 'registration_open' || searchParams.status === '报名中') {
+        // 报名中：当前时间 < 开始时间
+        queryBuilder.andWhere('activity.startTime > :now', { now });
+      } else if (searchParams.status === 'in_progress' || searchParams.status === '进行中') {
+        // 进行中：开始时间 <= 当前时间 <= 结束时间
+        queryBuilder.andWhere('activity.startTime <= :now AND activity.endTime >= :now', { now });
+      } else if (searchParams.status === 'completed' || searchParams.status === '已结束') {
+        // 已结束：当前时间 > 结束时间
+        queryBuilder.andWhere('activity.endTime < :now', { now });
+      }
+    }
+
     // 时间范围筛选
     if (searchParams.startDate && searchParams.endDate) {
       queryBuilder.andWhere(
