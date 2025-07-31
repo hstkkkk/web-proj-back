@@ -61,7 +61,7 @@ export class CommentService {
       userId,
       activityId,
       content,
-      rating,
+      rating: rating !== undefined ? rating : 5, // 如果没有提供rating，默认为5星
     });
 
     return await this.commentRepository.save(comment);
