@@ -25,14 +25,14 @@ export class CommentService {
    * @param userId 用户ID
    * @param activityId 活动ID
    * @param content 评论内容
-   * @param rating 评分
+   * @param rating 评分（可选）
    * @returns 评论信息
    */
   async createComment(
     userId: number,
     activityId: number,
     content: string,
-    rating: number
+    rating?: number
   ): Promise<Comment> {
     // 验证活动是否存在
     const activity = await this.activityRepository.findOne({
@@ -43,8 +43,8 @@ export class CommentService {
       throw new Error('活动不存在');
     }
 
-    // 验证评分范围
-    if (rating < 1 || rating > 5) {
+    // 如果提供了评分，验证评分范围
+    if (rating !== null && rating !== undefined && (rating < 1 || rating > 5)) {
       throw new Error('评分必须在1-5之间');
     }
 

@@ -1,7 +1,8 @@
-import { Controller, Post, Get, Del, Body, Param, Query } from '@midwayjs/core';
+import { Controller, Post, Get, Del, Body, Param, Query, Inject } from '@midwayjs/core';
 import { Validate } from '@midwayjs/validate';
-import { Inject } from '@midwayjs/core';
+import { Context } from '@midwayjs/koa';
 import { CommentService } from '../service/comment.service';
+import { JWTService } from '../service/jwt.service';
 import { Rule, RuleType } from '@midwayjs/validate';
 
 /**
@@ -14,8 +15,8 @@ export class CreateCommentDTO {
   @Rule(RuleType.string().required())
   content: string;
 
-  @Rule(RuleType.number().min(1).max(5).required())
-  rating: number;
+  @Rule(RuleType.number().min(1).max(5).optional())
+  rating?: number;
 }
 
 /**
@@ -27,6 +28,12 @@ export class CommentController {
   @Inject()
   commentService: CommentService;
 
+  @Inject()
+  jwtService: JWTService;
+
+  @Inject()
+  ctx: Context;
+
   /**
    * 创建评论
    */
@@ -34,13 +41,20 @@ export class CommentController {
   @Validate()
   async createComment(@Body() commentData: CreateCommentDTO) {
     try {
-      // 在实际应用中，应该从JWT Token中获取用户ID
-      const userId = 1;
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        this.ctx.status = 401;
+        return {
+          success: false,
+          message: '未提供认证令牌',
+        };
+      }
+
       const comment = await this.commentService.createComment(
         userId,
         commentData.activityId,
         commentData.content,
-        commentData.rating
+        commentData.rating || null
       );
       return {
         success: true,
@@ -145,5 +159,30 @@ export class CommentController {
         message: error.message,
       };
     }
+  }
+
+  /**
+   * 从JWT token中获取当前用户ID
+   */
+  private async getCurrentUserId(): Promise<number | null> {
+    const authHeader = this.ctx.headers.authorization;
+    
+    if (!authHeader) {
+      return null;
+    }
+
+    const token = this.jwtService.extractTokenFromHeader(authHeader);
+    
+    if (!token) {
+      return null;
+    }
+
+    const decoded = this.jwtService.verifyToken(token);
+    
+    if (!decoded) {
+      return null;
+    }
+
+    return decoded.userId;
   }
 }

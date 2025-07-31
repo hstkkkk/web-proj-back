@@ -60,10 +60,10 @@ export class ActivityService {
       .where('activity.isActive = :isActive', { isActive: true });
 
     // 关键词搜索
-    if (searchParams.keyword) {
+    if (searchParams.search) {
       queryBuilder.andWhere(
-        '(activity.title LIKE :keyword OR activity.description LIKE :keyword)',
-        { keyword: `%${searchParams.keyword}%` }
+        '(activity.title LIKE :search OR activity.description LIKE :search)',
+        { search: `%${searchParams.search}%` }
       );
     }
 

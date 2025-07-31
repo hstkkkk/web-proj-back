@@ -3,6 +3,7 @@ import { Validate } from '@midwayjs/validate';
 import { Inject } from '@midwayjs/core';
 import { Context } from '@midwayjs/koa';
 import { UserService } from '../service/user.service';
+import { JWTService } from '../service/jwt.service';
 import { CreateUserDTO, LoginDTO, UpdateUserDTO } from '../dto/user.dto';
 
 /**
@@ -13,6 +14,9 @@ import { CreateUserDTO, LoginDTO, UpdateUserDTO } from '../dto/user.dto';
 export class UserController {
   @Inject()
   userService: UserService;
+
+  @Inject()
+  jwtService: JWTService;
 
   @Inject()
   ctx: Context;
@@ -50,10 +54,19 @@ export class UserController {
         loginData.password
       );
       if (user) {
+        // 生成JWT token
+        const token = this.jwtService.generateToken({
+          userId: user.id,
+          username: user.username,
+        });
+        
         return {
           success: true,
           message: '登录成功',
-          data: user,
+          data: {
+            ...user,
+            token,
+          },
         };
       } else {
         return {

@@ -12,6 +12,7 @@ import {
 import { Validate } from '@midwayjs/validate';
 import { Context } from '@midwayjs/koa';
 import { ActivityService } from '../service/activity.service';
+import { JWTService } from '../service/jwt.service';
 import {
   CreateActivityDTO,
   UpdateActivityDTO,
@@ -26,6 +27,9 @@ import {
 export class ActivityController {
   @Inject()
   activityService: ActivityService;
+
+  @Inject()
+  jwtService: JWTService;
 
   @Inject()
   ctx: Context;
@@ -252,18 +256,22 @@ export class ActivityController {
   private async getCurrentUserId(): Promise<number | null> {
     const authHeader = this.ctx.headers.authorization;
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader) {
       return null;
     }
 
-    const token = authHeader.substring(7);
+    const token = this.jwtService.extractTokenFromHeader(authHeader);
     
-    try {
-      const jwt = require('jsonwebtoken');
-      const decoded = jwt.verify(token, 'your-secret-key') as any;
-      return decoded.userId;
-    } catch (error) {
+    if (!token) {
       return null;
     }
+
+    const decoded = this.jwtService.verifyToken(token);
+    
+    if (!decoded) {
+      return null;
+    }
+
+    return decoded.userId;
   }
 }

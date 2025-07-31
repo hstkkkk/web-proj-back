@@ -30,6 +30,9 @@ export class CreateActivityDTO {
 
   @Rule(RuleType.string().required())
   category: string;
+
+  @Rule(RuleType.string().allow('').optional())
+  requirements?: string;
 }
 
 /**
@@ -63,6 +66,9 @@ export class UpdateActivityDTO {
   @Rule(RuleType.string().optional())
   category?: string;
 
+  @Rule(RuleType.string().allow('').optional())
+  requirements?: string;
+
   @Rule(RuleType.string().valid('active', 'cancelled', 'completed').optional())
   status?: string;
 }
@@ -71,11 +77,14 @@ export class UpdateActivityDTO {
  * 活动搜索DTO
  */
 export class SearchActivityDTO {
-  @Rule(RuleType.string().optional())
-  keyword?: string;
+  @Rule(RuleType.string().allow('').optional())
+  search?: string;  // 改名从 keyword 到 search
 
-  @Rule(RuleType.string().optional())
+  @Rule(RuleType.string().allow('').optional())
   category?: string;
+
+  @Rule(RuleType.string().allow('').optional())
+  status?: string;  // 添加 status 字段
 
   @Rule(RuleType.date().optional())
   startDate?: Date;

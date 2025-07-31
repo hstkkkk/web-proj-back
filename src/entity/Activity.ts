@@ -54,6 +54,9 @@ export class Activity {
   @Column({ length: 100 })
   category: string; // 运动类别
 
+  @Column({ type: 'text', nullable: true })
+  requirements: string; // 参与要求
+
   @Column({ default: true })
   isActive: boolean;
 
