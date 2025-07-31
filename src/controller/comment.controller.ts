@@ -113,8 +113,15 @@ export class CommentController {
   @Get('/my')
   async getMyComments() {
     try {
-      // 在实际应用中，应该从JWT Token中获取用户ID
-      const userId = 1;
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        this.ctx.status = 401;
+        return {
+          success: false,
+          message: '未提供认证令牌',
+        };
+      }
+
       const comments = await this.commentService.getUserComments(userId);
       return {
         success: true,
@@ -134,8 +141,15 @@ export class CommentController {
   @Del('/:commentId')
   async deleteComment(@Param('commentId') commentId: string) {
     try {
-      // 在实际应用中，应该从JWT Token中获取用户ID
-      const userId = 1;
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        this.ctx.status = 401;
+        return {
+          success: false,
+          message: '未提供认证令牌',
+        };
+      }
+
       await this.commentService.deleteComment(parseInt(commentId), userId);
       return {
         success: true,
