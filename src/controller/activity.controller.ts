@@ -186,8 +186,15 @@ export class ActivityController {
   @Get('/my/created')
   async getMyActivities() {
     try {
-      // 在实际应用中，应该从JWT Token中获取用户ID
-      const userId = 1;
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        this.ctx.status = 401;
+        return {
+          success: false,
+          message: '未提供认证令牌',
+        };
+      }
+
       const activities = await this.activityService.getUserActivities(userId);
       return {
         success: true,
