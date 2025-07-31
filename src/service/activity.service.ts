@@ -69,22 +69,49 @@ export class ActivityService {
 
     // 分类筛选
     if (searchParams.category) {
-      queryBuilder.andWhere('activity.category = :category', {
-        category: searchParams.category,
+      // 中英文分类映射
+      const categoryMapping: { [key: string]: string[] } = {
+        足球: ['足球', 'football'],
+        篮球: ['篮球', 'basketball'],
+        网球: ['网球', 'tennis'],
+        羽毛球: ['羽毛球', 'badminton'],
+        乒乓球: ['乒乓球', 'table tennis', 'ping pong'],
+        游泳: ['游泳', 'swimming'],
+        跑步: ['跑步', 'running'],
+        健身: ['健身', 'fitness', 'gym'],
+      };
+
+      const possibleCategories = categoryMapping[searchParams.category] || [
+        searchParams.category,
+      ];
+      queryBuilder.andWhere('activity.category IN (:...categories)', {
+        categories: possibleCategories,
       });
     }
 
     // 状态筛选（基于时间）
     if (searchParams.status) {
       const now = new Date();
-      
-      if (searchParams.status === 'registration_open' || searchParams.status === '报名中') {
+
+      if (
+        searchParams.status === 'registration_open' ||
+        searchParams.status === '报名中'
+      ) {
         // 报名中：当前时间 < 开始时间
         queryBuilder.andWhere('activity.startTime > :now', { now });
-      } else if (searchParams.status === 'in_progress' || searchParams.status === '进行中') {
+      } else if (
+        searchParams.status === 'in_progress' ||
+        searchParams.status === '进行中'
+      ) {
         // 进行中：开始时间 <= 当前时间 <= 结束时间
-        queryBuilder.andWhere('activity.startTime <= :now AND activity.endTime >= :now', { now });
-      } else if (searchParams.status === 'completed' || searchParams.status === '已结束') {
+        queryBuilder.andWhere(
+          'activity.startTime <= :now AND activity.endTime >= :now',
+          { now }
+        );
+      } else if (
+        searchParams.status === 'completed' ||
+        searchParams.status === '已结束'
+      ) {
         // 已结束：当前时间 > 结束时间
         queryBuilder.andWhere('activity.endTime < :now', { now });
       }

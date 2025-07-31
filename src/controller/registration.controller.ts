@@ -1,4 +1,12 @@
-import { Controller, Post, Get, Del, Body, Param, Inject } from '@midwayjs/core';
+import {
+  Controller,
+  Post,
+  Get,
+  Del,
+  Body,
+  Param,
+  Inject,
+} from '@midwayjs/core';
 import { Validate } from '@midwayjs/validate';
 import { Context } from '@midwayjs/koa';
 import { RegistrationService } from '../service/registration.service';
@@ -204,13 +212,13 @@ export class RegistrationController {
    */
   private async getCurrentUserId(): Promise<number | null> {
     const authHeader = this.ctx.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return null;
     }
 
     const token = authHeader.substring(7);
-    
+
     try {
       const jwt = require('jsonwebtoken');
       const decoded = jwt.verify(token, 'your-secret-key') as any;

@@ -237,7 +237,7 @@ export class ActivityController {
       const registrations = await this.activityService.getActivityRegistrations(
         parseInt(id)
       );
-      
+
       return {
         success: true,
         data: registrations,
@@ -255,19 +255,19 @@ export class ActivityController {
    */
   private async getCurrentUserId(): Promise<number | null> {
     const authHeader = this.ctx.headers.authorization;
-    
+
     if (!authHeader) {
       return null;
     }
 
     const token = this.jwtService.extractTokenFromHeader(authHeader);
-    
+
     if (!token) {
       return null;
     }
 
     const decoded = this.jwtService.verifyToken(token);
-    
+
     if (!decoded) {
       return null;
     }

@@ -1,4 +1,13 @@
-import { Controller, Post, Get, Del, Body, Param, Query, Inject } from '@midwayjs/core';
+import {
+  Controller,
+  Post,
+  Get,
+  Del,
+  Body,
+  Param,
+  Query,
+  Inject,
+} from '@midwayjs/core';
 import { Validate } from '@midwayjs/validate';
 import { Context } from '@midwayjs/koa';
 import { CommentService } from '../service/comment.service';
@@ -166,19 +175,19 @@ export class CommentController {
    */
   private async getCurrentUserId(): Promise<number | null> {
     const authHeader = this.ctx.headers.authorization;
-    
+
     if (!authHeader) {
       return null;
     }
 
     const token = this.jwtService.extractTokenFromHeader(authHeader);
-    
+
     if (!token) {
       return null;
     }
 
     const decoded = this.jwtService.verifyToken(token);
-    
+
     if (!decoded) {
       return null;
     }

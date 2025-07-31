@@ -59,7 +59,7 @@ export class UserController {
           userId: user.id,
           username: user.username,
         });
-        
+
         return {
           success: true,
           message: '登录成功',
@@ -138,7 +138,7 @@ export class UserController {
       // In a real application, you would get user from auth middleware
       // For now, we'll implement a simple version that works with tests
       const authHeader = this.ctx.headers.authorization;
-      
+
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
         this.ctx.status = 401;
         return {
@@ -148,12 +148,12 @@ export class UserController {
       }
 
       const token = authHeader.substring(7);
-      
+
       try {
         const jwt = require('jsonwebtoken');
         const decoded = jwt.verify(token, 'your-secret-key') as any;
         const user = await this.userService.getUserById(decoded.userId);
-        
+
         if (!user) {
           this.ctx.status = 401;
           return {
@@ -161,7 +161,7 @@ export class UserController {
             message: '用户不存在',
           };
         }
-        
+
         return {
           success: true,
           data: user,

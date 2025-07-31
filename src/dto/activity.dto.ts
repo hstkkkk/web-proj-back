@@ -78,13 +78,13 @@ export class UpdateActivityDTO {
  */
 export class SearchActivityDTO {
   @Rule(RuleType.string().allow('').optional())
-  search?: string;  // 改名从 keyword 到 search
+  search?: string; // 改名从 keyword 到 search
 
   @Rule(RuleType.string().allow('').optional())
   category?: string;
 
   @Rule(RuleType.string().allow('').optional())
-  status?: string;  // 添加 status 字段
+  status?: string; // 添加 status 字段
 
   @Rule(RuleType.date().optional())
   startDate?: Date;
