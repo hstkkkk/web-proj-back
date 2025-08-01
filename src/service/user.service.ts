@@ -46,6 +46,7 @@ export class UserService {
     });
 
     const savedUser = await this.userRepository.save(user);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = savedUser;
     return userWithoutPassword;
   }
@@ -65,6 +66,7 @@ export class UserService {
     });
 
     if (user && this.verifyPassword(password, user.password)) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password: pwd, ...userWithoutPassword } = user;
       const token = this.generateToken(user.id);
       return {
@@ -85,7 +87,8 @@ export class UserService {
       where: { id, isActive: true },
     });
     if (user) {
-      const { password, ...userWithoutPassword } = user;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _password, ...userWithoutPassword } = user;
       return userWithoutPassword;
     }
     return null;
@@ -118,7 +121,8 @@ export class UserService {
 
     Object.assign(user, updateData);
     const updatedUser = await this.userRepository.save(user);
-    const { password, ...userWithoutPassword } = updatedUser;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _password, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword;
   }
 
