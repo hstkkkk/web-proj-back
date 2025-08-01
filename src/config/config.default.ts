@@ -8,13 +8,31 @@ export default {
     port: 7001,
   },
   cors: {
-    origin: '*', // 开发环境允许所有源，生产环境需要更严格
+    origin: (ctx) => {
+      const allowedOrigins = [
+        'http://localhost:5173',
+        'http://127.0.0.1:7001',
+        'http://localhost:7001',
+        'http://127.0.0.1:5173'
+      ];
+      const requestOrigin = ctx.get('origin');
+      return allowedOrigins.includes(requestOrigin) ? requestOrigin : 'http://localhost:5173';
+    },
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   },
   crossDomain: {
-    allowOrigin: '*',
+    allowOrigin: (ctx) => {
+      const allowedOrigins = [
+        'http://localhost:5173',
+        'http://127.0.0.1:7001',
+        'http://localhost:7001',
+        'http://127.0.0.1:5173'
+      ];
+      const requestOrigin = ctx.get('origin');
+      return allowedOrigins.includes(requestOrigin) ? requestOrigin : 'http://localhost:5173';
+    },
     credentials: true,
   },
   typeorm: {

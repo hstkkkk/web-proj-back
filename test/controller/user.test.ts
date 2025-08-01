@@ -17,14 +17,10 @@ describe('User Controller', () => {
 
   describe('POST /api/users/register', () => {
     it('should register user successfully', async () => {
-      const timestamp = Date.now();
-      const randomId = Math.random().toString(36).substr(2, 9);
-      const uniqueUsername = `testuser_${timestamp}_${randomId}`;
-
       const userData = {
-        username: uniqueUsername,
+        username: 'testuser', // 使用固定用户名，供后续重复测试使用
         password: 'password123',
-        email: `testuser_${timestamp}_${randomId}@example.com`,
+        email: 'testuser@example.com',
         phone: '13800138000',
         realName: 'Test User'
       };

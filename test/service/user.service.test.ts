@@ -17,6 +17,8 @@ describe('User Service', () => {
   });
 
   describe('createUser', () => {
+    let firstUser: any;
+
     it('should create user successfully', async () => {
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).substr(2, 9);
@@ -37,30 +39,33 @@ describe('User Service', () => {
       expect(result.realName).toBe(userData.realName);
       // 密码应该被加密，不应该是明文
       expect(result.password).not.toBe(userData.password);
+      
+      // 保存第一个用户信息供后续测试使用
+      firstUser = result;
     });
 
     it('should throw error for duplicate username', async () => {
       const userData = {
-        username: 'servicetest1', // 重复用户名
+        username: firstUser.username, // 使用第一个用户的用户名
         password: 'password123',
         email: 'servicetest2@example.com',
         phone: '13800138401',
         realName: 'Service Test User 2'
       };
 
-      await expect(userService.createUser(userData)).rejects.toThrow();
+      await expect(userService.createUser(userData)).rejects.toThrow('用户名已存在');
     });
 
     it('should throw error for duplicate email', async () => {
       const userData = {
         username: 'servicetest3',
         password: 'password123',
-        email: 'servicetest1@example.com', // 重复邮箱
+        email: firstUser.email, // 使用第一个用户的邮箱
         phone: '13800138402',
         realName: 'Service Test User 3'
       };
 
-      await expect(userService.createUser(userData)).rejects.toThrow();
+      await expect(userService.createUser(userData)).rejects.toThrow('邮箱已被注册');
     });
   });
 
