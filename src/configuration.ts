@@ -5,10 +5,11 @@ import * as info from '@midwayjs/info';
 import * as typeorm from '@midwayjs/typeorm';
 import * as crossDomain from '@midwayjs/cross-domain';
 import * as staticFile from '@midwayjs/static-file';
-import { join } from 'path';
 // import { DefaultErrorFilter } from './filter/default.filter';
 // import { NotFoundFilter } from './filter/notfound.filter';
 import { ReportMiddleware } from './middleware/report.middleware';
+import * as DefaultConfig from './config/config.default';
+import * as UnitTestConfig from './config/config.unittest';
 
 @Configuration({
   imports: [
@@ -22,7 +23,12 @@ import { ReportMiddleware } from './middleware/report.middleware';
       enabledEnvironment: ['local'],
     },
   ],
-  importConfigs: [join(__dirname, './config')],
+  importConfigs: [
+    {
+      default: DefaultConfig,
+      unittest: UnitTestConfig,
+    },
+  ],
 })
 export class MainConfiguration {
   @App('koa')

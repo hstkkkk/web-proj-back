@@ -1,9 +1,5 @@
 import { MidwayConfig } from '@midwayjs/core';
-import { User } from '../entity/User';
-import { Activity } from '../entity/Activity';
-import { Registration } from '../entity/Registration';
-import { Comment } from '../entity/Comment';
-import { Order } from '../entity/Order';
+import * as entity from '../entity';
 
 export default {
   // use for cookie sign key, should change to your own and keep security
@@ -12,13 +8,13 @@ export default {
     port: 7001,
   },
   cors: {
-    origin: 'http://localhost:5173', // 前端开发服务器地址
+    origin: '*', // 开发环境允许所有源，生产环境需要更严格
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     allowedMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   },
   crossDomain: {
-    allowOrigin: 'http://localhost:5173',
+    allowOrigin: '*',
     credentials: true,
   },
   typeorm: {
@@ -28,7 +24,13 @@ export default {
         database: './database.sqlite',
         synchronize: true,
         logging: false,
-        entities: [User, Activity, Registration, Comment, Order],
+        entities: [
+          entity.User,
+          entity.Activity,
+          entity.Registration,
+          entity.Comment,
+          entity.Order,
+        ],
       },
     },
   },
@@ -42,6 +44,10 @@ export default {
       default: {
         prefix: '/',
         dir: 'public',
+      },
+      another: {
+        prefix: '/assets',
+        dir: 'public/assets',
       },
     },
   },
