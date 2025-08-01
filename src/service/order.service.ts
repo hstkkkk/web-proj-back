@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Order } from '../entity/Order';
 import { Activity } from '../entity/Activity';
 import { User } from '../entity/User';
+import { Registration } from '../entity/Registration';
 
 /**
  * 订单服务类
@@ -19,6 +20,9 @@ export class OrderService {
 
   @InjectEntityModel(User)
   userRepository: Repository<User>;
+
+  @InjectEntityModel(Registration)
+  registrationRepository: Repository<Registration>;
 
   /**
    * 创建订单
@@ -93,6 +97,7 @@ export class OrderService {
 
     return await this.orderRepository.find({
       where,
+      relations: ['activity'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -150,6 +155,15 @@ export class OrderService {
     order.paymentStatus = 'success';
     const updatedOrder = await this.orderRepository.save(order);
 
+    // 创建报名记录
+    const registration = this.registrationRepository.create({
+      userId,
+      activityId: order.activityId,
+      status: 'confirmed',
+      notes: order.notes,
+    });
+    await this.registrationRepository.save(registration);
+
     // 更新活动参与人数
     activity.currentParticipants += 1;
     await this.activityRepository.save(activity);
@@ -195,6 +209,56 @@ export class OrderService {
     }
 
     await this.orderRepository.save(order);
+    return true;
+  }
+
+  /**
+   * 申请退款
+   * @param orderNumber 订单号
+   * @param userId 用户ID
+   * @returns 操作结果
+   */
+  async refundOrder(orderNumber: string, userId: number): Promise<boolean> {
+    const order = await this.orderRepository.findOne({
+      where: { orderNumber, userId },
+    });
+
+    if (!order) {
+      throw new Error('订单不存在');
+    }
+
+    if (order.status !== 'paid') {
+      throw new Error('只有已支付的订单才能申请退款');
+    }
+
+    // 检查活动是否已开始（可以根据业务需求调整）
+    const activity = await this.activityRepository.findOne({
+      where: { id: order.activityId },
+    });
+
+    if (activity && new Date(activity.startTime) <= new Date()) {
+      throw new Error('活动已开始，无法申请退款');
+    }
+
+    // 设置订单状态为退款
+    order.status = 'refunded';
+    await this.orderRepository.save(order);
+
+    // 删除相应的报名记录
+    const registration = await this.registrationRepository.findOne({
+      where: { userId, activityId: order.activityId },
+    });
+
+    if (registration) {
+      await this.registrationRepository.remove(registration);
+    }
+
+    // 减少活动参与人数
+    if (activity) {
+      activity.currentParticipants -= 1;
+      await this.activityRepository.save(activity);
+    }
+
     return true;
   }
 

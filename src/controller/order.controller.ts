@@ -1,7 +1,17 @@
-import { Controller, Post, Get, Put, Body, Param, Query } from '@midwayjs/core';
+import {
+  Controller,
+  Post,
+  Get,
+  Put,
+  Body,
+  Param,
+  Query,
+  Inject,
+} from '@midwayjs/core';
 import { Validate } from '@midwayjs/validate';
-import { Inject } from '@midwayjs/core';
+import { Context } from '@midwayjs/koa';
 import { OrderService } from '../service/order.service';
+import { JWTService } from '../service/jwt.service';
 import { Rule, RuleType } from '@midwayjs/validate';
 
 /**
@@ -11,7 +21,7 @@ export class CreateOrderDTO {
   @Rule(RuleType.number().required())
   activityId: number;
 
-  @Rule(RuleType.string().optional())
+  @Rule(RuleType.string().optional().allow(''))
   notes?: string;
 }
 
@@ -22,7 +32,36 @@ export class CreateOrderDTO {
 @Controller('/api/orders')
 export class OrderController {
   @Inject()
+  ctx: Context;
+
+  @Inject()
   orderService: OrderService;
+
+  @Inject()
+  jwtService: JWTService;
+
+  private async getCurrentUserId(): Promise<number> {
+    const token = this.ctx.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      this.ctx.status = 401;
+      this.ctx.body = { error: 'Authentication token required' };
+      throw new Error('Authentication token required');
+    }
+
+    try {
+      const decoded = this.jwtService.verifyToken(token);
+      if (!decoded || !decoded.userId) {
+        this.ctx.status = 401;
+        this.ctx.body = { error: 'Invalid or expired token' };
+        throw new Error('Invalid or expired token');
+      }
+      return decoded.userId;
+    } catch (error) {
+      this.ctx.status = 401;
+      this.ctx.body = { error: 'Invalid or expired token' };
+      throw new Error('Invalid or expired token');
+    }
+  }
 
   /**
    * 创建订单
@@ -31,8 +70,7 @@ export class OrderController {
   @Validate()
   async createOrder(@Body() orderData: CreateOrderDTO) {
     try {
-      // 在实际应用中，应该从JWT Token中获取用户ID
-      const userId = 1;
+      const userId = await this.getCurrentUserId();
       const order = await this.orderService.createOrder(
         userId,
         orderData.activityId,
@@ -57,8 +95,7 @@ export class OrderController {
   @Get('/my')
   async getMyOrders(@Query('status') status?: string) {
     try {
-      // 在实际应用中，应该从JWT Token中获取用户ID
-      const userId = 1;
+      const userId = await this.getCurrentUserId();
       const orders = await this.orderService.getUserOrders(userId, status);
       return {
         success: true,
@@ -104,8 +141,7 @@ export class OrderController {
   @Put('/:orderNumber/pay')
   async payOrder(@Param('orderNumber') orderNumber: string) {
     try {
-      // 在实际应用中，应该从JWT Token中获取用户ID
-      const userId = 1;
+      const userId = await this.getCurrentUserId();
       const order = await this.orderService.payOrder(orderNumber, userId);
       return {
         success: true,
@@ -126,12 +162,31 @@ export class OrderController {
   @Put('/:orderNumber/cancel')
   async cancelOrder(@Param('orderNumber') orderNumber: string) {
     try {
-      // 在实际应用中，应该从JWT Token中获取用户ID
-      const userId = 1;
+      const userId = await this.getCurrentUserId();
       await this.orderService.cancelOrder(orderNumber, userId);
       return {
         success: true,
         message: '订单取消成功',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+  }
+
+  /**
+   * 申请退款
+   */
+  @Put('/:orderNumber/refund')
+  async refundOrder(@Param('orderNumber') orderNumber: string) {
+    try {
+      const userId = await this.getCurrentUserId();
+      await this.orderService.refundOrder(orderNumber, userId);
+      return {
+        success: true,
+        message: '退款申请成功',
       };
     } catch (error) {
       return {
@@ -147,8 +202,7 @@ export class OrderController {
   @Get('/stats/my')
   async getOrderStats() {
     try {
-      // 在实际应用中，应该从JWT Token中获取用户ID
-      const userId = 1;
+      const userId = await this.getCurrentUserId();
       const stats = await this.orderService.getOrderStats(userId);
       return {
         success: true,

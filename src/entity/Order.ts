@@ -8,6 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { User } from './User';
+import { Activity } from './Activity';
 
 /**
  * 订单实体类
@@ -52,4 +53,8 @@ export class Order {
 
   @Column()
   userId: number;
+
+  @ManyToOne(() => Activity, activity => activity.id)
+  @JoinColumn({ name: 'activityId' })
+  activity: Activity;
 }
